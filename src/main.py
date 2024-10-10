@@ -4,9 +4,10 @@ from scipy.signal import argrelextrema
 
 
 def main():
-    df = pd.read_csv("./csv/distance.csv")
+    df = pd.read_csv("./csv/distance1.csv")
     # CSVファイルの読み込み
 
+    df['time'] = df['time'].astype(int)
     # 現在の位置ベクトルの計算
     df['position'] = df[['dx', 'dy', 'dz']].apply(lambda x: np.array([x['dx'], x['dy'], x['dz']]), axis=1)
 
@@ -30,6 +31,7 @@ def main():
     minima_indices = argrelextrema(y_components, np.less)[0]
 
     count_pull = 0
+    pull_times = []
     # 極大値と極小値を順に比較して手前に引いたタイミングをカウント
     for max_idx in maxima_indices:
         # 極大値より後にある極小値を探す
@@ -44,8 +46,15 @@ def main():
             # 内積がしきい値を超えた場合に手前に移動したとみなす
             if dot_product < -threshold:  # 手前への移動なので負の内積
                 count_pull += 1
+                # 極大値と極小値間の時間を計算（ms単位）
+                start_time = df['time'].iloc[max_idx]
+                end_time = df['time'].iloc[min_idx]
+                time_taken = end_time - start_time
+                pull_times.append(time_taken)
 
+    # 結果の表示
     print(f'手前に引いた回数: {count_pull}')
-
+    for i, time in enumerate(pull_times):
+        print(f'手前に引いた動作 {i+1} の時間: {time} ms')
 if __name__ == "__main__":
     main()
